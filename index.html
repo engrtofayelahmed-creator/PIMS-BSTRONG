@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B-STRONG PMIS | LGED</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f6f9;color:#243746}.sidebar{position:fixed;left:0;top:0;width:240px;height:100vh;background:#123b5d;color:#fff;overflow-y:auto;z-index:1000}.logo{text-align:center;padding:20px;background:#0c2b43}.logo h2{margin:0;font-size:21px}.logo p{font-size:11px}.menu{padding:14px 18px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.1)}.menu:hover{background:#1d5b82}.submenu{display:none;background:#0b2c44}.submenu button{width:100%;padding:10px 25px;text-align:left;border:none;background:transparent;color:#fff;cursor:pointer}.submenu button:hover{background:#1d5b82}.main{margin-left:240px;padding:20px}.header,.section,.card,.chart-box{background:#fff;padding:18px;border-radius:10px;box-shadow:0 2px 7px #ddd;margin-bottom:18px}.header h1{margin:0;color:#123b5d}.header p{color:#777}.kpi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:15px}.card h4{color:#123b5d;margin:3px 0 12px}.card h2{color:#34495e;font-size:14px;line-height:1.5;font-weight:500;margin:8px 0}.section h2{color:#123b5d;margin-top:0}.district-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.district-buttons button{padding:15px;border:none;border-radius:7px;background:#1f6f9f;color:#fff;font-size:15px;cursor:pointer}.district-buttons button:hover{background:#164f73}#upazilaArea{display:none}.upazila-buttons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.upazila-buttons button{padding:10px;background:#eef5f9;border:1px solid #bbb;border-radius:5px;cursor:pointer;overflow-wrap:anywhere}.upazila-buttons button:hover{background:#d9eaf3}.upazila-buttons button.active{background:#1f6f9f;color:#fff}.scheme-box{margin-top:20px;background:#f8fafb;padding:15px;border-radius:8px;overflow:hidden}.scheme-box table{width:100%;min-width:700px;border-collapse:collapse}.scheme-box th,.scheme-box td{border:1px solid #ddd;padding:10px;text-align:left;overflow-wrap:anywhere}.scheme-box th{background:#123b5d;color:white}.table-wrap{overflow-x:auto}.package-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:15px 0 22px}.package-stat{background:#fff;border:1px solid #dbe5ec;border-left:4px solid #1f6f9f;padding:13px 8px;border-radius:7px;text-align:center}.package-stat strong{display:block;font-size:23px;color:#123b5d;margin-bottom:7px}.package-stat span{font-size:12px;color:#555}.map-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.map-header h2{margin:0}.gps-btn{background:#28a745;color:white;border:0;padding:10px 16px;border-radius:6px;font-weight:bold;cursor:pointer}#map{height:430px;width:100%;border-radius:8px}.charts{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}.chart-box{min-width:0}.muted{color:#667784;font-size:13px}.tag{display:inline-block;padding:4px 8px;border-radius:20px;background:#e9f2f8;color:#123b5d;font-size:12px}.search-row{display:flex;gap:10px;margin-bottom:12px}.search-row input{width:100%;padding:10px;border:1px solid #cbd5dc;border-radius:6px}.footer{text-align:center;color:#6b7780;font-size:12px;padding:10px}
+@media(max-width:1000px){.kpi{grid-template-columns:1fr}.district-buttons{grid-template-columns:repeat(2,1fr)}.charts{grid-template-columns:1fr}.upazila-buttons{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){.sidebar{width:175px}.main{margin-left:175px;padding:10px}.logo{padding:14px 6px}.logo h2{font-size:17px}.menu{padding:12px 10px;font-size:13px}.district-buttons{grid-template-columns:1fr}.upazila-buttons{grid-template-columns:repeat(2,minmax(0,1fr))}.package-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.map-header{align-items:flex-start;flex-direction:column}#map{height:340px}.card,.section{padding:13px}}
+</style>
+</head>
+<body>
+<div class="sidebar"><div class="logo"><h2>B-STRONG PMIS</h2><p>Project Management Information System</p></div>
+<div class="menu" onclick="window.scrollTo({top:0,behavior:'smooth'})">🏠 Dashboard</div>
+<div class="menu" onclick="toggleMenu('projectMenu')">📁 Project Management</div><div id="projectMenu" class="submenu"><button onclick="scrollToSection('districtSection')">District / Upazila</button><button onclick="scrollToSection('upazilaArea')">Package Register</button></div>
+<div class="menu" onclick="toggleMenu('procurementMenu')">📋 Procurement</div><div id="procurementMenu" class="submenu"><button onclick="scrollToSection('upazilaArea')">Package IDs</button><button onclick="scrollToSection('upazilaArea')">Tender / Contract</button></div>
+<div class="menu" onclick="toggleMenu('monitoringMenu')">📊 Monitoring</div><div id="monitoringMenu" class="submenu"><button onclick="scrollToSection('upazilaArea')">Physical Progress</button><button onclick="scrollToSection('mapSection')">Project Location Map</button></div>
+<div class="menu" onclick="toggleMenu('reportMenu')">📄 Reports</div><div id="reportMenu" class="submenu"><button onclick="window.print()">Print Dashboard</button></div></div>
+<div class="main">
+<div class="header"><h1>B-STRONG Project Dashboard</h1><p>Local Government Engineering Department (LGED)</p><span class="tag">
+</div>
+<div class="kpi">
+<div class="card"><h4>Project Area</h4><h2>Total Districts: 06</h2><h2>Total Upazilas : 40</h2><p class="muted"> </p></div>
+<div class="card"><h4>Implementation Status</h4><h2>Total schemes under the project: 123</h2><h2>Schemes completed: 1</h2><h2>Schemes currently under implementation: 30</h2><h2>Remaining schemes: 75</h2></div>
+<div class="card"><h4>Total Project Budget</h4><h2>Total: 1909 Crore</h2><h2>PLA: 1647 Crore & GOB: 262 Crore</h2><h2>Physical Progress: 1.5%</h2><h2>Financial Progress: 0.2%</h2></div>
+<div class="card"><h4>Component-wise Schemes and Quantities</h4><h2>1. Road Rehabilitation: 50 schemes covering 803 km</h2><h2>2. Bridge rehabilitation/construction: 702 metres (included in road schemes)</h2><h2>3.Climate-Resilient Shelter Reconstruction, Completion of Construction Works, and Capacity Enhancement: 19 schemes, along with 6 school rehabilitation schemes, covering:
+		Reconstruction of 25 shelters,Completion of construction works for 43 MDSP shelters,Capacity enhancement of 54 shelters & Rehabilitation of 200 existing schools.</h2><h2>4.Canal Re-excavation: 5 schemes covering 121.30 km of canals</h2><h2>5.Culvert Reconstruction: 456 metres of culverts (included in the road schemes)</h2><h2>6.Lightning Protection System Installation: 100 units &Laboratory Facilities: 36</h2><h2>7.Goods Supply: 28 schemes & Intellectual Services: 16 schemes.</h2></div>
+<div class="card"><h4>List of Scheme Roads (District-wise)</h4><h2>Feni — Road length: 22.750 km; proposed: 22.750 km</h2><h2>Noakhali — Road length: 89.670 km; proposed: 63.030 km</h2><h2>Cumilla — Road length: 156.010 km; proposed: 89.068 km</h2></div>
+<div class="card"><h4>Shelter and Canal Summary</h4><h2>Disaster shelters: 25</h2><h2>Incomplete MDSP shelters: 32</h2><h2>Incomplete MDSP steel structures (GOB): 6</h2><h2>Incomplete MDSP RCC structures (GOB): 5</h2><h2>Capacity expansion: Lakshmipur 34; Feni 20; total 54</h2><h2>Canal re-excavation lengths (as supplied): Lakshmipur 38 km; Noakhali 4.50 km; Feni 49.55 km; Cumilla 29.50 km; total stated 121.55 km</h2></div>
+</div>
+<div class="section" id="districtSection"><h2>District-wise Project Area</h2><div class="district-buttons"><button onclick="showDistrict('Chattogram')">Chattogram</button><button onclick="showDistrict('Cumilla')">Cumilla</button><button onclick="showDistrict('Feni')">Feni</button><button onclick="showDistrict('Noakhali')">Noakhali</button><button onclick="showDistrict('Lakshmipur')">Lakshmipur</button><button onclick="showDistrict('Brahmanbaria')">Brahmanbaria</button></div></div>
+<div class="section" id="upazilaArea"><h2 id="districtTitle">Upazila-wise Package Register</h2><div class="search-row"><input id="packageSearch" type="search" placeholder="Search Package ID or Upazila..."><button class="gps-btn" onclick="clearPackageSearch()">Clear</button></div><div id="upazilaButtons" class="upazila-buttons"></div><div id="schemeResult" class="scheme-box">Select a district, then select an upazila to view the actual Package IDs from the supplied Excel file.</div></div>
+<div class="section" id="mapSection"><div class="map-header"><h2>Project Location Map</h2><button class="gps-btn" onclick="getGPSLocation()">📍 Locate My GPS Position</button></div><div id="map"></div><p class="muted">Map markers indicate approximate district centres, not exact package locations. Package GPS coordinates were not included in the Excel file.</p></div>
+<div class="charts"><div class="chart-box"><h3>District-wise Physical Progress</h3><canvas id="districtChart"></canvas><p class="muted">Illustrative values from the original HTML; replace with verified monitoring data.</p></div><div class="chart-box"><h3>GOB vs PLA Budget (Crore)</h3><canvas id="fundingChart"></canvas></div></div>
+<div class="footer">B-STRONG PMIS · LGED · Developed by Tofayel Ahmed”</div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const upazilaData = {
+  Chattogram:["Sandwip","Anwara","Banshkhali","Boalkhali","Chandanaish","Fatikchhari","Hathazari","Lohagara","Mirsharai","Patiya","Raozan","Rangunia","Satkania","Sitakunda"],
+  Cumilla:["Burichang","Barura","Brahmanpara","Debidwar","Muradnagar","Chauddagram"],
+  Lakshmipur:["Sadar","Ramganj","Kamalnagar","Ramgati"],
+  Noakhali:["Sadar","Begumganj","Chatkhil","Sonaimuri","Subarnachar","Companiganj","Kabirhat"],
+  Feni:["Fulgazi","Sonagazi","Feni Sadar","Chhagalnaiya","Parshuram","Daganbhuiyan"],
+  Brahmanbaria:["Sadar","Kasba","Akhaura","Ashuganj","Nasirnagar","Bancharampur","Bijoynagar","Nabinagar","Sarail"]
+};
+const packageData = {
+  "Feni": {
+    "Chhagalnaiya": [
+      {
+        "packageId": "BSTRONG-LGED -Feni/CS-3",
+        "sourceUpazila": "Chhagalnaiya",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Design for 8 shelters out of 11 is ready. No update yet. There is option to go for option 3 shelters, but that require further discssion. Option 1 and 5 design and estimate required"
+      }
+    ],
+    "Sonagazi": [
+      {
+        "packageId": "BSTRONG-LGED -Feni/RD-3",
+        "sourceUpazila": "Sonagazi",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert ",
+        "progress": null,
+        "status": "Increase in length (cost remians same), estimate ready"
+      },
+      {
+        "packageId": "BSTRONG - LGED-Feni / RD – 2",
+        "sourceUpazila": "Sonagazi",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "15 meter bridge is excluded from the scope. Now the length is 10.45 km. "
+      },
+      {
+        "packageId": "BSTRONG - LGED-Feni /26-27/CS – 4",
+        "sourceUpazila": "Sonagazi",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Ongoing"
+      }
+    ],
+    "Daganbhuiyan": [
+      {
+        "packageId": "BSTRONG-LGED -Feni/RD-6",
+        "sourceUpazila": "Daganbhuiyan",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "2 out of 4 estimates ready. Same update as before. Electric pole relocation is not yet finalized. "
+      }
+    ],
+    "Feni Sadar": [
+      {
+        "packageId": "BSTRONG - LGED-Feni /26-27/ CS – 1",
+        "sourceUpazila": "Feni",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Tender float: February 1, 2027 & Contract Sign: April 30, 2027"
+      },
+      {
+        "packageId": "BSTRONG - LGED-Feni /26-27/ ES – 1",
+        "sourceUpazila": "Feni",
+        "packageName": "Improvement of Existing School",
+        "progress": null,
+        "status": "Tender float: September 1, 2026 & Contract Sign: November 16, 2026"
+      }
+    ],
+    "Parshuram": [
+      {
+        "packageId": "BSTRONG - LGED-Feni /26-27/CS – 2",
+        "sourceUpazila": "Parshuram",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Tender float: February 1, 2027 & Contract Sign: April 30, 2027"
+      },
+      {
+        "packageId": "BSTRONG - LGED-Feni /26-27/ RD – 4",
+        "sourceUpazila": "Parshuram",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Tender float: September 1, 2026 & Contract Sign: November 16, 2026"
+      },
+      {
+        "packageId": "BSTRONG - LGED-Feni /26-27/ RD – 5",
+        "sourceUpazila": "Parshuram",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      }
+    ],
+    "Fulgazi": [
+      {
+        "packageId": "BSTRONG - LGED-Feni /26-27/RD – 1",
+        "sourceUpazila": "Fulgazi",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Will submit proposal after  technical field visit"
+      }
+    ]
+  },
+  "Noakhali": {
+    "Begumganj": [
+      {
+        "packageId": "BSTRONG - LGED-NOA / ES – I",
+        "sourceUpazila": "Begumganj",
+        "packageName": "Improvement of Existing School",
+        "progress": null,
+        "status": "Ongoing"
+      },
+      {
+        "packageId": "BSTRONG - LGED-NOA / RD – 2",
+        "sourceUpazila": "Begumganj",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Bridge design prepared by design unit"
+      },
+      {
+        "packageId": "BSTRONG-LGED -NOA/RD-3",
+        "sourceUpazila": "Begumganj",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Bridge design prepared by design unit"
+      },
+      {
+        "packageId": "BSTRONG - LGED-NOA /26-27/ CS – 1",
+        "sourceUpazila": "Begumganj",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Not Updated"
+      },
+      {
+        "packageId": "BSTRONG - LGED-NOA /26-27/ RD – 4",
+        "sourceUpazila": "Begumganj",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      }
+    ],
+    "Chatkhil": [
+      {
+        "packageId": "BSTRONG-LGED -NOA/RD-5",
+        "sourceUpazila": "Chatkhil",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Ongoing"
+      }
+    ],
+    "Companiganj": [
+      {
+        "packageId": "BSTRONG-LGED -NOA/RD-7",
+        "sourceUpazila": "Companiganj",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Will cover 4 roads instead of 6. now it is redeuced to 12.00 km. "
+      }
+    ],
+    "Sadar": [
+      {
+        "packageId": "BSTRONG - LGED-NOA /26-27/ RD – I",
+        "sourceUpazila": "Noakhali Sadar",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      }
+    ],
+    "Sonaimuri": [
+      {
+        "packageId": "BSTRONG - LGED-NOA /26-27/ RD – 6",
+        "sourceUpazila": "Sonaimuri",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      }
+    ]
+  },
+  "Lakshmipur": {
+    "Sadar": [
+      {
+        "packageId": "BSTRONG - LGED-LAX / ES – 1",
+        "sourceUpazila": "Laxmipur Sadar",
+        "packageName": "Improvement of Existing School",
+        "progress": null,
+        "status": "Ongoing"
+      },
+      {
+        "packageId": "BSTRONG-LGED -LAX/RD-2",
+        "sourceUpazila": "Laxmipur Sadar",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Ongoing"
+      },
+      {
+        "packageId": "BSTRONG - LGED-LAX /26-27/ CS – I",
+        "sourceUpazila": "Laxmipur Sadar",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Tender float: February 1, 2027 & Contract Sign: April 30, 2027"
+      },
+      {
+        "packageId": "BSTRONG - LGED-LAX /26-27/ RD – 1",
+        "sourceUpazila": "Laxmipur Sadar",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      }
+    ],
+    "Ramganj": [
+      {
+        "packageId": "BSTRONG - LGED-LAX / RD – 3",
+        "sourceUpazila": "Ramganj",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Ongoing"
+      },
+      {
+        "packageId": "BSTRONG - LGED-LAX /26-27/ CS – 2",
+        "sourceUpazila": "Ramganj",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Not Updated"
+      }
+    ],
+    "Kamalnagar": [
+      {
+        "packageId": "BSTRONG-LGED -LAX/RD-4",
+        "sourceUpazila": "Kamalnagar",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Ongoing"
+      }
+    ],
+    "Ramgati": [
+      {
+        "packageId": "BSTRONG - LGED-LAX /26-27/ CS – 3",
+        "sourceUpazila": "Ramgati",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Not Updated"
+      },
+      {
+        "packageId": "BSTRONG - LGED-LAX /26-27/ RD – 5",
+        "sourceUpazila": "Ramgati",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      }
+    ]
+  },
+  "Cumilla": {
+    "Burichang": [
+      {
+        "packageId": "BSTRONG-LGED -CUM/RD-1",
+        "sourceUpazila": "Burichong",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Will proceed instead of CUM/RD-2, submitted estimation. Estimate is not yet received, widenting is there. Tree cutting. "
+      },
+      {
+        "packageId": "BSTRONG - LGED-CUM /26-27/ CS – 3",
+        "sourceUpazila": "Burichong",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Tender float: March 1, 2027 & Contract Sign:May 30, 2027 (LGED will confirm about the land availability)"
+      },
+      {
+        "packageId": "BSTRONG-LGED -CUM/26-27/RD-2",
+        "sourceUpazila": "Burichong",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      }
+    ],
+    "Barura": [
+      {
+        "packageId": "BSTRONG-LGED -CUM/RD-3",
+        "sourceUpazila": "Barura",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Survey complete, will submit estimation after one week"
+      },
+      {
+        "packageId": "BSTRONG - LGED-CUM /26-27/ CS – 2",
+        "sourceUpazila": "Barura",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Tender float: March 1, 2027 & Contract Sign:May 30, 2027 (LGED will confirm about the land availability)"
+      }
+    ],
+    "Brahmanpara": [
+      {
+        "packageId": "BSTRONG -LGED-CUM /RD – 5",
+        "sourceUpazila": "Brahmanpara",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Survey complete, will submit estimation after one week"
+      },
+      {
+        "packageId": "BSTRONG-LGED -CUM/RD-6",
+        "sourceUpazila": "Brahmanpara",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Will proceed instead of CUM/RD-4"
+      },
+      {
+        "packageId": "BSTRONG - LGED-CUM /26-27/ RD – 4",
+        "sourceUpazila": "Brahmanpara",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Widening Issue"
+      },
+      {
+        "packageId": "BSTRONG - LGED-CUM /26-27/ RD – 5",
+        "sourceUpazila": "Brahmanpara",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Survey done, will submit the estimation. "
+      },
+      {
+        "packageId": "BSTRONG - LGED-CUM /26-27/ RD – 6",
+        "sourceUpazila": "Brahmanpara",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      }
+    ],
+    "Debidwar": [
+      {
+        "packageId": "BSTRONG - LGED-CUM / RD – 7",
+        "sourceUpazila": "Debidwar",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Ongoing"
+      },
+      {
+        "packageId": "BSTRONG - LGED-CUM /26-27/ RD – 7",
+        "sourceUpazila": "Debidwar",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      },
+      {
+        "packageId": "BSTRONG - LGED-CUM /26-27/ RD – 8",
+        "sourceUpazila": "Debidwar",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      }
+    ],
+    "Muradnagar": [
+      {
+        "packageId": "BSTRONG-LGED -CUM/RD-9",
+        "sourceUpazila": "Muradnagar",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Ongoing"
+      },
+      {
+        "packageId": "BSTRONG - LGED-CUM /26-27/ CS – 1",
+        "sourceUpazila": "Muradnagar",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Tender float: March 1, 2027 & Contract Sign:May 30, 2027 (LGED will confirm about the land availability)"
+      },
+      {
+        "packageId": "BSTRONG - LGED-CUM /26-27/ RD – 9",
+        "sourceUpazila": "Muradnagar",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      },
+      {
+        "packageId": "BSTRONG - LGED-CUM /26-27/ RD – 10",
+        "sourceUpazila": "Muradnagar",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      },
+      {
+        "packageId": "BSTRONG - LGED-CUM /26-27/ RD – 11",
+        "sourceUpazila": "Muradnagar",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      },
+      {
+        "packageId": "BSTRONG - LGED-CUM /26-27/ RD – 12",
+        "sourceUpazila": "Muradnagar",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      }
+    ],
+    "Chauddagram": [
+      {
+        "packageId": "BSTRONG - LGED-CUM / RD – 13",
+        "sourceUpazila": "Chouddagram",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Ongoing"
+      }
+    ],
+    "District-level": [
+      {
+        "packageId": "BSTRONG - LGED-CUM /26-27/ ES – I",
+        "sourceUpazila": "Cumilla",
+        "packageName": "",
+        "progress": null,
+        "status": "Tender float: September 1, 2026 & Contract Sign: November 16, 2026"
+      }
+    ]
+  },
+  "Chattogram": {
+    "Fatikchhari": [
+      {
+        "packageId": "BSTRONG - LGED-CHA / RD – 2",
+        "sourceUpazila": "Fatikchhari",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Implementation not Possible  due to Tea Garden"
+      },
+      {
+        "packageId": "BSTRONG - LGED-CHA / RD – 3",
+        "sourceUpazila": "Fatikchhari",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Field visit needed to verify the estimate. "
+      },
+      {
+        "packageId": "BSTRONG - LGED-CHA /26-27/ CS - 5",
+        "sourceUpazila": "Fatikchhari",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Tender float: July 1, 2026 & Contract Sign:Spetember 16, 2026"
+      }
+    ],
+    "Hathazari": [
+      {
+        "packageId": "BSTRONG-LGED -CHA/RD-4",
+        "sourceUpazila": "Hathazari",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Estimate ready"
+      }
+    ],
+    "Anwara": [
+      {
+        "packageId": "BSTRONG - LGED-CHA / RD – 5",
+        "sourceUpazila": "Anwara",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Field visit needed to verify the estimate. "
+      },
+      {
+        "packageId": "BSTRONG - LGED-CHA /26-27/ CS - 1",
+        "sourceUpazila": "Anwara",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Tender float: March 1, 2027 & Contract Sign:May 30, 2027"
+      }
+    ],
+    "Mirsharai": [
+      {
+        "packageId": "BSTRONG-LGED -CHA/RD-6",
+        "sourceUpazila": "Mirsharai",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Increased road length"
+      }
+    ],
+    "Satkania": [
+      {
+        "packageId": "BSTRONG-LGED -CHA/RD-7",
+        "sourceUpazila": "Satkania",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Estimate ready"
+      }
+    ],
+    "Sandwip": [
+      {
+        "packageId": "BSTRONG - LGED-CHA /26-27/ CS – 2",
+        "sourceUpazila": "Sandwip",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Tender float: March 1, 2027 & Contract Sign:May 30, 2027"
+      },
+      {
+        "packageId": "BSTRONG - LGED-CHA /26-27/ CS – 7",
+        "sourceUpazila": "Sandwip",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Tender float: September 1, 2026 & Contract Sign: November 16, 2026"
+      },
+      {
+        "packageId": "BSTRONG - LGED-CHA /26-27/ RD – I",
+        "sourceUpazila": "Sandwip",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Estimate 200% above DPP. will move to FY 27, LGED will conduct PIC and PSC. Will need field visit to validate."
+      }
+    ],
+    "Boalkhali": [
+      {
+        "packageId": "BSTRONG - LGED-CHA /26-27/ CS – 3",
+        "sourceUpazila": "Boalkhali",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Tender float: July 1, 2026 & Contract Sign:Spetember 16, 2026"
+      }
+    ],
+    "Banshkhali": [
+      {
+        "packageId": "BSTRONG - LGED-CHA /26-27/ CS – 4",
+        "sourceUpazila": "Banshkhali",
+        "packageName": "",
+        "progress": null,
+        "status": "Tender float: July 1, 2026 & Contract Sign:Spetember 16, 2026"
+      },
+      {
+        "packageId": "BSTRONG - LGED-CHA /26-27/ RD – 8",
+        "sourceUpazila": "Banshkhali",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Tender float: September 1, 2026 & Contract Sign: November 16, 2026"
+      }
+    ],
+    "Chandanaish": [
+      {
+        "packageId": "BSTRONG - LGED-CHA /26-27/ CS - 6",
+        "sourceUpazila": "Chandanaish",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Tender float: September 1, 2026 & Contract Sign: November 16, 2026"
+      }
+    ],
+    "Lohagara": [
+      {
+        "packageId": "BSTRONG - LGED-CHA /26-27/ CS – 8",
+        "sourceUpazila": "Lohagara",
+        "packageName": "Capacity Enhancement of existing shelter",
+        "progress": null,
+        "status": "Not Updated"
+      }
+    ],
+    "District-level": [
+      {
+        "packageId": "BSTRONG - LGED-CHA /26-27/ ES – 1",
+        "sourceUpazila": "Chattogram",
+        "packageName": "Improvement of Existing School",
+        "progress": null,
+        "status": "Tender float: September 1, 2026 & Contract Sign: November 16, 2026"
+      }
+    ]
+  },
+  "Brahmanbaria": {
+    "Akhaura": [
+      {
+        "packageId": "BSTRONG-LGED -BRA/RD-4",
+        "sourceUpazila": "Akhaura",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Ongoing"
+      }
+    ],
+    "Kasba": [
+      {
+        "packageId": "BSTRONG-LGED -BRA/RD-3",
+        "sourceUpazila": "Kasba",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Will submit the estimation soon"
+      }
+    ],
+    "District-level": [
+      {
+        "packageId": "BSTRONG - LGED-BRA /26-27/ ES – I",
+        "sourceUpazila": "B. Baria",
+        "packageName": "Improvement of Existing School",
+        "progress": null,
+        "status": "Tender float: September 1, 2026 & Contract Sign: November 16, 2026"
+      }
+    ],
+    "Bijoynagar": [
+      {
+        "packageId": "BSTRONG - LGED-BRA /26-27/ RD – I",
+        "sourceUpazila": "Bijoynagar",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Ongoing"
+      },
+      {
+        "packageId": "BSTRONG - LGED-BRA /26-27/ RD – 2",
+        "sourceUpazila": "Bijoynagar",
+        "packageName": "Rehabilitation of emergency evacuation of Rural Roads & box culvert",
+        "progress": null,
+        "status": "Not Updated"
+      }
+    ]
+  }
+};
+const districtCoordinates={Chattogram:[22.3569,91.7832],Cumilla:[23.4607,91.1809],Feni:[23.0159,91.3976],Noakhali:[22.8696,91.0995],Lakshmipur:[22.9447,90.8412],Brahmanbaria:[23.9571,91.1119]};
+function toggleMenu(id){const el=document.getElementById(id);el.style.display=el.style.display==='block'?'none':'block'}
+function scrollToSection(id){const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})}
+function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function districtPackages(district){return packageData[district]||{}}
+function showDistrict(district){
+  document.getElementById('upazilaArea').style.display='block';
+  document.getElementById('districtTitle').textContent=district+' District — Upazila-wise Package IDs';
+  const container=document.getElementById('upazilaButtons');container.innerHTML='';
+  const listed=[...(upazilaData[district]||[])];
+  const pkgUps=Object.keys(districtPackages(district));
+  pkgUps.forEach(u=>{if(u==='District-level'||!listed.includes(u))listed.push(u)});
+  listed.forEach(upazila=>{const btn=document.createElement('button');const count=(districtPackages(district)[upazila]||[]).length;btn.textContent=upazila+(count?' ('+count+')':'');btn.onclick=()=>{container.querySelectorAll('button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');showScheme(district,upazila)};container.appendChild(btn)});
+  document.getElementById('schemeResult').innerHTML='Select an Upazila to view its Package IDs.';
+  map.setView(districtCoordinates[district],9);scrollToSection('upazilaArea');
+}
+function showScheme(district,upazila,search=''){
+  let packages=(districtPackages(district)[upazila]||[]).filter(p=>(p.packageId+' '+p.sourceUpazila+' '+p.packageName).toLowerCase().includes(search.toLowerCase()));
+  const allPackages=districtPackages(district)[upazila]||[];
+  const htmlRows=packages.map((p,i)=>`<tr><td>${i+1}</td><td>${escapeHtml(p.packageId)}</td><td>${escapeHtml(p.sourceUpazila||upazila)}</td><td>${escapeHtml(p.packageName||'Not specified in Excel')}</td><td>${p.progress==null?'Not updated':escapeHtml(p.progress+'%')}</td><td>${escapeHtml(p.status||'Not Updated')}</td></tr>`).join('');
+  document.getElementById('schemeResult').innerHTML=`<h3>${escapeHtml(district)} — ${escapeHtml(upazila)}</h3><div class="package-summary"><div class="package-stat"><strong>${allPackages.length}</strong><span>Total Package IDs</span></div><div class="package-stat"><strong>${packages.length}</strong><span>Matching Packages</span></div><div class="package-stat"><strong>—</strong><span>Progress data not in Excel</span></div></div><div class="table-wrap"><table><thead><tr><th>SL</th><th>Package ID </th><th>Upazila as recorded</th><th>Package Name</th><th>Progress</th><th>Status</th></tr></thead><tbody>${htmlRows||`<tr><td colspan="6">${search?'No Package IDs match your search.':'No Package ID listed for this Upazila in the supplied Excel file.'}</td></tr>`}</tbody></table></div><p class="muted">Package IDs are taken from the supplied Excel file. Scheme IDs, package names, progress, and status were not provided in that file and have not been invented.</p>`;
+}
+function clearPackageSearch(){document.getElementById('packageSearch').value='';const active=document.querySelector('#upazilaButtons button.active');if(active){const district=document.getElementById('districtTitle').textContent.split(' District')[0];const up=active.textContent.replace(/ \(\d+\)$/,'');showScheme(district,up)}else document.getElementById('schemeResult').textContent='Select an Upazila to view its Package IDs.'}
+document.getElementById('packageSearch').addEventListener('input',function(){const q=this.value.trim();const active=document.querySelector('#upazilaButtons button.active');if(active){const district=document.getElementById('districtTitle').textContent.split(' District')[0];const up=active.textContent.replace(/ \(\d+\)$/,'');showScheme(district,up,q)}else if(q){for(const district of Object.keys(packageData)){for(const up of Object.keys(packageData[district])){if(packageData[district][up].some(p=>p.packageId.toLowerCase().includes(q.toLowerCase()))){showDistrict(district);const btn=[...document.querySelectorAll('#upazilaButtons button')].find(b=>b.textContent.replace(/ \(\d+\)$/,'')===up);if(btn){btn.click();showScheme(district,up,q)}return}}}}});
+const map=L.map('map').setView([23.5,90.5],7);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+Object.keys(districtCoordinates).forEach(d=>L.marker(districtCoordinates[d]).addTo(map).bindPopup(`<b>${d}</b><br>Approximate district-centre marker<br>Use district buttons for Package IDs.`));
+let userGpsMarker=null,userGpsCircle=null;function getGPSLocation(){if(!navigator.geolocation){alert('Geolocation is not supported by your browser.');return}navigator.geolocation.getCurrentPosition(pos=>{const lat=pos.coords.latitude,lng=pos.coords.longitude,acc=pos.coords.accuracy;if(userGpsMarker)map.removeLayer(userGpsMarker);if(userGpsCircle)map.removeLayer(userGpsCircle);map.setView([lat,lng],14);userGpsMarker=L.marker([lat,lng]).addTo(map).bindPopup(`<b>Your Current GPS Location</b><br>Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`).openPopup();userGpsCircle=L.circle([lat,lng],{radius:acc,color:'#28a745',fillColor:'#28a745',fillOpacity:.2}).addTo(map)},err=>alert('GPS Error: '+err.message+'\nPlease allow location access in your browser.'),{enableHighAccuracy:true,timeout:10000,maximumAge:0})}
+new Chart(document.getElementById('districtChart'),{type:'bar',data:{labels:['Chattogram','Cumilla','Feni','Noakhali','Lakshmipur','Brahmanbaria'],datasets:[{label:'Physical Progress (%) — illustrative',data:[65,55,70,48,42,35]}]},options:{responsive:true,scales:{y:{beginAtZero:true,max:100}}}});
+new Chart(document.getElementById('fundingChart'),{type:'pie',data:{labels:['GOB','PLA'],datasets:[{data:[262,1647]}]},options:{responsive:true}});
+</script>
+</body></html>
